@@ -6,14 +6,24 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="https://daive-chau.github.io">
-  <title>Daive Chau</title>
+  <title>java | Daive Chau</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Daive Chau">
-<meta property="og:url" content="https://daive-chau.github.io/index.html">
+  <meta name="description" content="##目录[toc]
+##自旋锁(Spin lock)">
+<meta property="og:type" content="article">
+<meta property="og:title" content="java">
+<meta property="og:url" content="https://daive-chau.github.io/2017/02/10/java/index.html">
 <meta property="og:site_name" content="Daive Chau">
+<meta property="og:description" content="##目录[toc]
+##自旋锁(Spin lock)">
+<meta property="og:image" content="http://img.blog.csdn.net/20161227200119356?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvemhvdXdlaUlU/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast">
+<meta property="og:image" content="http://img.blog.csdn.net/20161227200153622?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvemhvdXdlaUlU/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast">
+<meta property="og:updated_time" content="2017-02-10T09:37:47.924Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Daive Chau">
+<meta name="twitter:title" content="java">
+<meta name="twitter:description" content="##目录[toc]
+##自旋锁(Spin lock)">
+<meta name="twitter:image" content="http://img.blog.csdn.net/20161227200119356?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvemhvdXdlaUlU/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast">
   
     <link rel="alternative" href="/atom.xml" title="Daive Chau" type="application/atom+xml">
   
@@ -137,16 +147,14 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-    <article id="post-java" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+            <article id="post-java" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/02/10/java/">java</a>
+    <h1 class="article-title" itemprop="name">
+      java
     </h1>
   
 
@@ -160,12 +168,73 @@
     <div class="article-entry" itemprop="articleBody">
       
         <p>##目录<br>[toc]</p>
-<p>##自旋锁(Spin lock)<br>
-        
-          <a class="article-more-a" href="/2017/02/10/java/#more">more >></a>
-        
+<p>##自旋锁(Spin lock)<br><a id="more"></a><br>   自旋锁(spin lock)是一个典型的对临界资源的互斥手段，它的名称来源于它的特性。自旋锁是指当一个线程尝试获取某个锁时，如果该锁已被其他线程占用，就一直循环检测锁是否被释放，而不是进入线程挂起或睡眠状态。由于自旋锁只不进行线程状态的改变，所以当线程竞争不激烈时，它的响应速度极快。自旋锁适用于锁保护的临界区很小的情况，如果线程之间竞争激烈，上下文切换将耗费大量资源，性能会明显下降。</p>
+<p>###代码简单实现</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div></pre></td><td class="code"><pre><div class="line">package aqs;</div><div class="line"></div><div class="line">import java.util.concurrent.atomic.AtomicReference;</div><div class="line"></div><div class="line">public class SpinLock &#123;</div><div class="line">	               //使用原子类来标识线程是否获取到了锁</div><div class="line">	   private AtomicReference&lt;Thread&gt; lockOwner = new AtomicReference&lt;Thread&gt;();</div><div class="line"></div><div class="line">	   public void lock() &#123;</div><div class="line">	       Thread currentThread = Thread.currentThread();</div><div class="line"></div><div class="line">	              // 如果锁未被占用，则设置当前线程为锁的拥有者</div><div class="line">	       while (!lockOwner.compareAndSet(null, currentThread)) &#123;</div><div class="line">	       &#125;</div><div class="line">	   &#125;</div><div class="line"></div><div class="line">	   public void unlock() &#123;</div><div class="line">	       Thread currentThread = Thread.currentThread();</div><div class="line"></div><div class="line">	              // 只有锁的拥有者才能释放锁</div><div class="line">	       lockOwner.compareAndSet(currentThread, null);</div><div class="line">	   &#125;</div><div class="line">	&#125;</div></pre></td></tr></table></figure>
+<p>   这是一个简单的自旋锁代码，compareAndSet保证了我们操作的原则性，可以将c它看做是对锁的获取，只有获取到锁才能继续进行以后的操作，否则将会一直循环检测锁是否被释放，不会阻塞当前线程。<br>   这种自旋锁在多线程同时竞争锁时，并不能保证其公平性。而公平自选锁的三种常见形式就是Ticket CLH 和MCS。</p>
+<p>##Ticket Spinlock<br>   Ticket就类似于现实中的排队叫号，锁拥有一个服务号，表示正在服务的线程，还有一个排队号；每个线程尝试获取锁之前先拿一个排队号，然后不断轮询锁的当前服务号是否是自己的排队号，如果是，则表示自己拥有了锁，不是则继续轮询。</p>
+<p>###代码简单实现<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div></pre></td><td class="code"><pre><div class="line">public class TicketSpinLock &#123;</div><div class="line"></div><div class="line">	// 排队号</div><div class="line">	private AtomicInteger ticketNum = new AtomicInteger(0);</div><div class="line"></div><div class="line">	// 服务号</div><div class="line">	private AtomicInteger owner = new AtomicInteger(0);</div><div class="line"></div><div class="line">	// 当前线程持有的票据</div><div class="line">	private static final ThreadLocal&lt;Integer&gt; myTicketLocal = new ThreadLocal&lt;Integer&gt;();</div><div class="line"></div><div class="line">	public void lock() &#123;</div><div class="line">		int myTicket = ticketNum.getAndIncrement();// 票据</div><div class="line">		myTicketLocal.set(myTicket);</div><div class="line">		while (myTicket != owner.get()) &#123;</div><div class="line"></div><div class="line">		&#125;</div><div class="line">	&#125;</div><div class="line"></div><div class="line">	public void unlock() &#123;</div><div class="line">		int myTicket = myTicketLocal.get();</div><div class="line">		owner.compareAndSet(myTicket, myTicket + 1);</div><div class="line">	&#125;</div><div class="line"></div><div class="line">	public static void main(String[] args) throws InterruptedException &#123;</div><div class="line">		TicketSpinLock lock = new TicketSpinLock();</div><div class="line">		Service service = new Service(new TicketSpinLock());</div><div class="line">		for (int i = 0; i &lt; 100; i++) &#123;</div><div class="line">			new Thread(new ServiceThread(service), i + &quot;&quot;).start();</div><div class="line">		&#125;</div><div class="line">		TimeUnit.SECONDS.sleep(20);</div><div class="line">	&#125;</div><div class="line"></div><div class="line">	public static class ServiceThread extends Thread &#123;</div><div class="line"></div><div class="line">		private Service service;</div><div class="line"></div><div class="line">		public ServiceThread(Service service) &#123;</div><div class="line">			this.service = service;</div><div class="line">		&#125;</div><div class="line"></div><div class="line">		@Override</div><div class="line">		public void run() &#123;</div><div class="line">			 service.doService2();</div><div class="line">//			service.doService();</div><div class="line">		&#125;</div><div class="line">	&#125;</div><div class="line"></div><div class="line">	// dosomething</div><div class="line">	public static class Service &#123;</div><div class="line">		private int i;</div><div class="line"></div><div class="line">		private TicketSpinLock ticketLock;</div><div class="line"></div><div class="line">		public Service() &#123;</div><div class="line">		&#125;</div><div class="line"></div><div class="line">		public Service(TicketSpinLock ticketLock) &#123;</div><div class="line">			this.ticketLock = ticketLock;</div><div class="line">		&#125;</div><div class="line"></div><div class="line">		// 加锁</div><div class="line">		public void doService() &#123;</div><div class="line">			ticketLock.lock();</div><div class="line">			i = i + 1;</div><div class="line">			System.out.println(String.format(&quot;i=%s&quot;, i));</div><div class="line">			ticketLock.unlock();</div><div class="line">		&#125;</div><div class="line"></div><div class="line">		// 不加锁</div><div class="line">		public void doService2() &#123;</div><div class="line">			i = i + 1;</div><div class="line">			System.out.println(String.format(&quot;i=%s&quot;, i));</div><div class="line">		&#125;</div><div class="line"></div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>   Ticket Lock 虽然解决了公平性的问题，但是多处理器系统上，每个进程/线程占用的处理器都在读写同一个变量serviceNum ，每次读写操作都必须在多个处理器缓存之间进行缓存同步，这会导致繁重的系统总线和内存的流量，大大降低系统整体的性能。下面介绍的CLH锁和MCS锁都是为了解决这个问题的，它们不再在一个全局变量上自旋，而是在自身本地变量上自旋。</p>
+<p>##CLH锁(CLH Spinlock)<br> CLH锁是一种基于链表的可扩展、高性能、公平的自旋锁，申请线程只在本地变量上自旋，它不断轮询前驱的状态，如果发现前驱释放了锁就结束自旋。</p>
+<pre><code>当一个线程需要获取锁时：
+
+a.创建一个的QNode，将其中的locked设置为true表示需要获取锁
+
+b.线程对tail域调用getAndSet方法，使自己成为队列的尾部，同时获取一个指向其前趋结点的引用myPred
+
+c.该线程就在前趋结点的locked字段上旋转，直到前趋结点释放锁
+
+d.当一个线程需要释放锁时，将当前结点的locked域设置为false，同时回收前趋结点
+</code></pre><p>　　如下图，线程A需要获取锁，其myNode域为true，tail指向线程A的结点，然后线程B也加入到线程A后面，tail指向线程B的结点。然后线程A和B都在其myPred域上旋转，一旦它的myPred结点的locked字段变为false，它就可以获取锁。明显线程A的myPred locked域为false，此时线程A获取到了锁。<br>　　<br><img src="http://img.blog.csdn.net/20161227200119356?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvemhvdXdlaUlU/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="这里写图片描述"></p>
+<p>###代码简单实现</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div></pre></td><td class="code"><pre><div class="line">public class CLHLock implements Lock &#123;  </div><div class="line">    AtomicReference&lt;QNode&gt; tail = new AtomicReference&lt;QNode&gt;(new QNode());  </div><div class="line">    ThreadLocal&lt;QNode&gt; myPred;  </div><div class="line">    ThreadLocal&lt;QNode&gt; myNode;  </div><div class="line">  </div><div class="line">    public CLHLock() &#123;  </div><div class="line">        tail = new AtomicReference&lt;QNode&gt;(new QNode());  </div><div class="line">        myNode = new ThreadLocal&lt;QNode&gt;() &#123;  </div><div class="line">            protected QNode initialValue() &#123;  </div><div class="line">                return new QNode();  </div><div class="line">            &#125;  </div><div class="line">        &#125;;  </div><div class="line">        myPred = new ThreadLocal&lt;QNode&gt;() &#123;  </div><div class="line">            protected QNode initialValue() &#123;  </div><div class="line">                return null;  </div><div class="line">            &#125;  </div><div class="line">        &#125;;  </div><div class="line">    &#125;  </div><div class="line">  </div><div class="line">    @Override  </div><div class="line">    public void lock() &#123;  </div><div class="line">        QNode qnode = myNode.get();  </div><div class="line">        qnode.locked = true;  </div><div class="line">        QNode pred = tail.getAndSet(qnode);  </div><div class="line">        myPred.set(pred);  </div><div class="line">        while (pred.locked) &#123;  </div><div class="line">        &#125;  </div><div class="line">    &#125;  </div><div class="line">  </div><div class="line">    @Override  </div><div class="line">    public void unlock() &#123;  </div><div class="line">        QNode qnode = myNode.get();  </div><div class="line">        qnode.locked = false;  </div><div class="line">        myNode.set(myPred.get());  </div><div class="line">    &#125;  </div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>###CLH分析<br>   CLH队列锁的优点是空间复杂度低（如果有n个线程，L个锁，每个线程每次只获取一个锁，那么需要的存储空间是O（L+n），n个线程有n个。myNode，L个锁有L个tail），CLH的一种变体被应用在了JAVA并发框架中。<br>    CLH在SMP系统结构下该法是非常有效的。但在NUMA系统结构下，每个线程有自己的内存，如果前趋结点的内存位置比较远，自旋判断前趋结点的locked域，性能将大打折扣，一种解决NUMA系统结构的思路是MCS队列锁。</p>
+<p>##MCS锁(MCS Spinlock)<br>MSC与CLH最大的不同并不是链表是显示还是隐式，而是线程自旋的规则不同:CLH是在前趋结点的locked域上自旋等待，而MSC是在自己的结点的locked域上自旋等待。正因为如此，它解决了CLH在NUMA系统架构中获取locked域状态内存过远的问题。</p>
+<pre><code>MCS队列锁的具体实现如下：
+
+a. 队列初始化时没有结点，tail=null
+
+b. 线程A想要获取锁，于是将自己置于队尾，由于它是第一个结点，它的locked域为false
+
+c. 线程B和C相继加入队列，a-&gt;next=b,b-&gt;next=c。且B和C现在没有获取锁，处于等待状态，所以它们的locked域为true，尾指针指向线程C对应的结点
+
+d. 线程A释放锁后，顺着它的next指针找到了线程B，并把B的locked域设置为false。这一动作会触发线程B获取锁
+</code></pre><p>  <img src="http://img.blog.csdn.net/20161227200153622?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvemhvdXdlaUlU/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="这里写图片描述"></p>
+<p>###代码简单实现</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div></pre></td><td class="code"><pre><div class="line">public class CLHLock implements Lock &#123;  </div><div class="line">    AtomicReference&lt;QNode&gt; tail = new AtomicReference&lt;QNode&gt;(new QNode());  </div><div class="line">    ThreadLocal&lt;QNode&gt; myPred;  </div><div class="line">    ThreadLocal&lt;QNode&gt; myNode;  </div><div class="line">  </div><div class="line">    public CLHLock() &#123;  </div><div class="line">        tail = new AtomicReference&lt;QNode&gt;(new QNode());  </div><div class="line">        myNode = new ThreadLocal&lt;QNode&gt;() &#123;  </div><div class="line">            protected QNode initialValue() &#123;  </div><div class="line">                return new QNode();  </div><div class="line">            &#125;  </div><div class="line">        &#125;;  </div><div class="line">        myPred = new ThreadLocal&lt;QNode&gt;() &#123;  </div><div class="line">            protected QNode initialValue() &#123;  </div><div class="line">                return null;  </div><div class="line">            &#125;  </div><div class="line">        &#125;;  </div><div class="line">    &#125;  </div><div class="line">  </div><div class="line">    @Override  </div><div class="line">    public void lock() &#123;  </div><div class="line">        QNode qnode = myNode.get();  </div><div class="line">        qnode.locked = true;  </div><div class="line">        QNode pred = tail.getAndSet(qnode);  </div><div class="line">        myPred.set(pred);  </div><div class="line">        while (pred.locked) &#123;  </div><div class="line">        &#125;  </div><div class="line">    &#125;  </div><div class="line">  </div><div class="line">    @Override  </div><div class="line">    public void unlock() &#123;  </div><div class="line">        QNode qnode = myNode.get();  </div><div class="line">        qnode.locked = false;  </div><div class="line">        myNode.set(myPred.get());  </div><div class="line">    &#125;  </div><div class="line">&#125;</div></pre></td></tr></table></figure>
       
 
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢老板<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://makefriends.bs2dl.huanjuyun.com/zbase_432709826336233243.png">
+                      <span class="reward-type">支付宝</span>
+                    </div>
+                    
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://makefriends.bs2dl.huanjuyun.com/zbase_3680018149704910031.png">
+                      <span class="reward-type">微信</span>
+                    </div>
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
       
     </div>
     <div class="article-info article-info-index">
@@ -187,12 +256,72 @@
       
 
       
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
+        </div>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="http://s.jiathis.com/qrcode.php?url=https://daive-chau.github.io/2017/02/10/java/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
       <div class="clearfix"></div>
     </div>
   </div>
 </article>
 
-
+  
+<nav id="article-nav">
+  
+  
+    <a href="/2017/02/10/hello-world/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">Hello World</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
 
 
 
@@ -200,62 +329,28 @@
 
 
   
-    <article id="post-hello-world" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/02/10/hello-world/">Hello World</a>
-    </h1>
-  
-
-        
-        <a href="/2017/02/10/hello-world/" class="archive-article-date">
-  	<time datetime="2017-02-10T05:44:58.006Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-02-10</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="external">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="external">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="external">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="external">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo new <span class="string">"My New Post"</span></div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="external">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo server</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="external">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo generate</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="external">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo deploy</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="external">Deployment</a></p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-
-
-
-
-
-
+  <div class="duoshuo">
+	<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="java" data-title="java" data-url="https://daive-chau.github.io/2017/02/10/java/"></div>
+	<!-- 多说评论框 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"Daive-Chau"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+	<!-- 多说公共JS代码 end -->
+</div>
 
   
-  
+
+
 
 
           </div>
@@ -277,8 +372,8 @@
     <script>
 	var yiliaConfig = {
 		mathjax: true,
-		isHome: true,
-		isPost: false,
+		isHome: false,
+		isPost: true,
 		isArchive: false,
 		isTag: false,
 		isCategory: false,
